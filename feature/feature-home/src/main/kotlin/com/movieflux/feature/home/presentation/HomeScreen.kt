@@ -42,7 +42,10 @@ fun HomeScreen(
 
     val shouldLoadMore by remember {
         derivedStateOf {
-            val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastVisible =
+                gridState.layoutInfo.visibleItemsInfo
+                    .lastOrNull()
+                    ?.index ?: 0
             val totalItems = gridState.layoutInfo.totalItemsCount
             totalItems > 0 && lastVisible >= totalItems - LOAD_MORE_THRESHOLD
         }
@@ -58,44 +61,47 @@ fun HomeScreen(
             onValueChange = viewModel::onSearchQueryChanged,
             label = { Text("Buscar filmes") },
             singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         )
 
         when {
             uiState.isLoading && uiState.movies.isEmpty() -> LoadingState()
-            uiState.errorMessage != null && uiState.movies.isEmpty() -> ErrorState(
-                failure = uiState.errorMessage!!,
-                onRetry = viewModel::loadNextPage,
-            )
+            uiState.errorMessage != null && uiState.movies.isEmpty() ->
+                ErrorState(
+                    failure = uiState.errorMessage!!,
+                    onRetry = viewModel::loadNextPage,
+                )
             uiState.movies.isEmpty() -> EmptyState(message = "Nenhum filme encontrado")
-            else -> LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                state = gridState,
-                contentPadding = PaddingValues(8.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                items(uiState.movies, key = { it.id }) { movie ->
-                    MovieCard(
-                        title = movie.title,
-                        posterUrl = movie.posterPath?.let { "$TMDB_POSTER_BASE_URL$it" },
-                        voteAverage = movie.voteAverage,
-                        isFavorite = movie.isFavorite,
-                        onClick = { onMovieClick(movie.id) },
-                        onFavoriteClick = { viewModel.onFavoriteClick(movie) },
-                        modifier = Modifier.padding(8.dp),
-                    )
-                }
-                if (uiState.isLoadingMore) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(16.dp),
+            else ->
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = gridState,
+                    contentPadding = PaddingValues(8.dp),
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    items(uiState.movies, key = { it.id }) { movie ->
+                        MovieCard(
+                            title = movie.title,
+                            posterUrl = movie.posterPath?.let { "$TMDB_POSTER_BASE_URL$it" },
+                            voteAverage = movie.voteAverage,
+                            isFavorite = movie.isFavorite,
+                            onClick = { onMovieClick(movie.id) },
+                            onFavoriteClick = { viewModel.onFavoriteClick(movie) },
+                            modifier = Modifier.padding(8.dp),
                         )
                     }
+                    if (uiState.isLoadingMore) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(16.dp),
+                            )
+                        }
+                    }
                 }
-            }
         }
     }
 }

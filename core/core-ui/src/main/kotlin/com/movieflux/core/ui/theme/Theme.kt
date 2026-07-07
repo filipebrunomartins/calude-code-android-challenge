@@ -6,17 +6,19 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val LightColors = lightColorScheme(
-    primary = TealGreenPrimary,
-    onPrimary = TealGreenOnPrimary,
-    primaryContainer = TealGreenContainer,
-)
+private val LightColors =
+    lightColorScheme(
+        primary = TealGreenPrimary,
+        onPrimary = TealGreenOnPrimary,
+        primaryContainer = TealGreenContainer,
+    )
 
-private val DarkColors = darkColorScheme(
-    primary = TealGreenPrimaryLightScheme,
-    onPrimary = TealGreenOnPrimary,
-    primaryContainer = TealGreenContainerDark,
-)
+private val DarkColors =
+    darkColorScheme(
+        primary = TealGreenPrimaryLightScheme,
+        onPrimary = TealGreenOnPrimary,
+        primaryContainer = TealGreenContainerDark,
+    )
 
 @Composable
 fun MovieFluxTheme(

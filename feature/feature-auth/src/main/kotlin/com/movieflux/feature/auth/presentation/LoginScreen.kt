@@ -44,9 +44,10 @@ fun LoginScreen(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -88,7 +89,10 @@ fun LoginScreen(
 }
 
 @Composable
-private fun BiometricOptInDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+private fun BiometricOptInDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Ativar biometria?") },

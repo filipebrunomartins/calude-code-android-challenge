@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GenreDao {
-
     @Query("SELECT * FROM genres")
     fun observeAll(): Flow<List<GenreEntity>>
 

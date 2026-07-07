@@ -17,11 +17,11 @@ private const val DATABASE_NAME = "movieflux.db"
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
-    fun provideMovieFluxDatabase(@ApplicationContext context: Context): MovieFluxDatabase =
-        Room.databaseBuilder(context, MovieFluxDatabase::class.java, DATABASE_NAME).build()
+    fun provideMovieFluxDatabase(
+        @ApplicationContext context: Context,
+    ): MovieFluxDatabase = Room.databaseBuilder(context, MovieFluxDatabase::class.java, DATABASE_NAME).build()
 
     @Provides
     fun provideGenreDao(database: MovieFluxDatabase): GenreDao = database.genreDao()

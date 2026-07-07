@@ -15,19 +15,15 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(apiKeyInterceptor: ApiKeyInterceptor): OkHttpClient = NetworkFactory.createOkHttpClient(apiKeyInterceptor)
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(apiKeyInterceptor: ApiKeyInterceptor): OkHttpClient =
-        NetworkFactory.createOkHttpClient(apiKeyInterceptor)
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = NetworkFactory.createRetrofit(BuildConfig.TMDB_BASE_URL, okHttpClient)
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
-        NetworkFactory.createRetrofit(BuildConfig.TMDB_BASE_URL, okHttpClient)
-
-    @Provides
-    @Singleton
-    fun provideTmdbApiService(retrofit: Retrofit): TmdbApiService =
-        retrofit.create(TmdbApiService::class.java)
+    fun provideTmdbApiService(retrofit: Retrofit): TmdbApiService = retrofit.create(TmdbApiService::class.java)
 }

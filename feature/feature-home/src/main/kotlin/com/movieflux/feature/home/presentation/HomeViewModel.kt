@@ -34,74 +34,80 @@ data class HomeUiState(
 private const val SEARCH_DEBOUNCE_MS = 400L
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val getPopularMoviesUseCase: GetPopularMoviesUseCase,
-    private val searchMoviesUseCase: SearchMoviesUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
-    observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
-) : ViewModel() {
+class HomeViewModel
+    @Inject
+    constructor(
+        private val getPopularMoviesUseCase: GetPopularMoviesUseCase,
+        private val searchMoviesUseCase: SearchMoviesUseCase,
+        private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+        observeFavoriteIdsUseCase: ObserveFavoriteIdsUseCase,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(HomeUiState())
 
-    private val _uiState = MutableStateFlow(HomeUiState())
+        val uiState: StateFlow<HomeUiState> =
+            combine(
+                _uiState,
+                observeFavoriteIdsUseCase(),
+            ) { state, favoriteIds ->
+                state.copy(movies = state.movies.map { it.copy(isFavorite = it.id in favoriteIds) })
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState(isLoading = true))
 
-    val uiState: StateFlow<HomeUiState> = combine(
-        _uiState,
-        observeFavoriteIdsUseCase(),
-    ) { state, favoriteIds ->
-        state.copy(movies = state.movies.map { it.copy(isFavorite = it.id in favoriteIds) })
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState(isLoading = true))
+        private var searchJob: Job? = null
 
-    private var searchJob: Job? = null
-
-    init {
-        loadNextPage()
-    }
-
-    fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            delay(SEARCH_DEBOUNCE_MS)
-            _uiState.update { it.copy(movies = emptyList(), currentPage = 0, totalPages = 1, errorMessage = null) }
+        init {
             loadNextPage()
         }
-    }
 
-    fun onFavoriteClick(movie: Movie) {
-        viewModelScope.launch { toggleFavoriteUseCase(movie) }
-    }
-
-    fun loadNextPage() {
-        val state = _uiState.value
-        if (state.isLoading || state.isLoadingMore) return
-        if (state.currentPage > 0 && state.currentPage >= state.totalPages) return
-
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(isLoading = state.currentPage == 0, isLoadingMore = state.currentPage > 0)
-            }
-
-            val nextPage = state.currentPage + 1
-            val result = if (state.searchQuery.isBlank()) {
-                getPopularMoviesUseCase(nextPage)
-            } else {
-                searchMoviesUseCase(state.searchQuery, nextPage)
-            }
-
-            when (result) {
-                is ResultOf.Success -> _uiState.update {
-                    it.copy(
-                        movies = it.movies + result.data.items,
-                        currentPage = result.data.page,
-                        totalPages = result.data.totalPages,
-                        isLoading = false,
-                        isLoadingMore = false,
-                        errorMessage = null,
-                    )
+        fun onSearchQueryChanged(query: String) {
+            _uiState.update { it.copy(searchQuery = query) }
+            searchJob?.cancel()
+            searchJob =
+                viewModelScope.launch {
+                    delay(SEARCH_DEBOUNCE_MS)
+                    _uiState.update { it.copy(movies = emptyList(), currentPage = 0, totalPages = 1, errorMessage = null) }
+                    loadNextPage()
                 }
-                is ResultOf.Error -> _uiState.update {
-                    it.copy(isLoading = false, isLoadingMore = false, errorMessage = result.failure)
+        }
+
+        fun onFavoriteClick(movie: Movie) {
+            viewModelScope.launch { toggleFavoriteUseCase(movie) }
+        }
+
+        fun loadNextPage() {
+            val state = _uiState.value
+            if (state.isLoading || state.isLoadingMore) return
+            if (state.currentPage > 0 && state.currentPage >= state.totalPages) return
+
+            viewModelScope.launch {
+                _uiState.update {
+                    it.copy(isLoading = state.currentPage == 0, isLoadingMore = state.currentPage > 0)
+                }
+
+                val nextPage = state.currentPage + 1
+                val result =
+                    if (state.searchQuery.isBlank()) {
+                        getPopularMoviesUseCase(nextPage)
+                    } else {
+                        searchMoviesUseCase(state.searchQuery, nextPage)
+                    }
+
+                when (result) {
+                    is ResultOf.Success ->
+                        _uiState.update {
+                            it.copy(
+                                movies = it.movies + result.data.items,
+                                currentPage = result.data.page,
+                                totalPages = result.data.totalPages,
+                                isLoading = false,
+                                isLoadingMore = false,
+                                errorMessage = null,
+                            )
+                        }
+                    is ResultOf.Error ->
+                        _uiState.update {
+                            it.copy(isLoading = false, isLoadingMore = false, errorMessage = result.failure)
+                        }
                 }
             }
         }
     }
-}

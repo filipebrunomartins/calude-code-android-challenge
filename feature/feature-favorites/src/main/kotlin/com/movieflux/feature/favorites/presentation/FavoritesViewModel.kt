@@ -21,16 +21,18 @@ data class FavoritesUiState(
 }
 
 @HiltViewModel
-class FavoritesViewModel @Inject constructor(
-    observeFavoritesUseCase: ObserveFavoritesUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
-) : ViewModel() {
+class FavoritesViewModel
+    @Inject
+    constructor(
+        observeFavoritesUseCase: ObserveFavoritesUseCase,
+        private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+    ) : ViewModel() {
+        val uiState: StateFlow<FavoritesUiState> =
+            observeFavoritesUseCase()
+                .map { movies -> FavoritesUiState(movies = movies, isLoading = false) }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FavoritesUiState(isLoading = true))
 
-    val uiState: StateFlow<FavoritesUiState> = observeFavoritesUseCase()
-        .map { movies -> FavoritesUiState(movies = movies, isLoading = false) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FavoritesUiState(isLoading = true))
-
-    fun onFavoriteClick(movie: Movie) {
-        viewModelScope.launch { toggleFavoriteUseCase(movie) }
+        fun onFavoriteClick(movie: Movie) {
+            viewModelScope.launch { toggleFavoriteUseCase(movie) }
+        }
     }
-}

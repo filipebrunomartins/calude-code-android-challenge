@@ -29,22 +29,23 @@ fun FavoritesScreen(
     when {
         uiState.isLoading -> LoadingState(modifier)
         uiState.isEmpty -> EmptyState(message = "Você ainda não favoritou nenhum filme", modifier = modifier)
-        else -> LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(8.dp),
-            modifier = modifier.fillMaxSize(),
-        ) {
-            items(uiState.movies, key = { it.id }) { movie ->
-                MovieCard(
-                    title = movie.title,
-                    posterUrl = movie.posterPath?.let { "$TMDB_POSTER_BASE_URL$it" },
-                    voteAverage = movie.voteAverage,
-                    isFavorite = movie.isFavorite,
-                    onClick = { onMovieClick(movie.id) },
-                    onFavoriteClick = { viewModel.onFavoriteClick(movie) },
-                    modifier = Modifier.padding(8.dp),
-                )
+        else ->
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(8.dp),
+                modifier = modifier.fillMaxSize(),
+            ) {
+                items(uiState.movies, key = { it.id }) { movie ->
+                    MovieCard(
+                        title = movie.title,
+                        posterUrl = movie.posterPath?.let { "$TMDB_POSTER_BASE_URL$it" },
+                        voteAverage = movie.voteAverage,
+                        isFavorite = movie.isFavorite,
+                        onClick = { onMovieClick(movie.id) },
+                        onFavoriteClick = { viewModel.onFavoriteClick(movie) },
+                        modifier = Modifier.padding(8.dp),
+                    )
+                }
             }
-        }
     }
 }

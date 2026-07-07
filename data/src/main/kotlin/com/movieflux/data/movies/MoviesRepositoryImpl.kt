@@ -14,37 +14,41 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MoviesRepositoryImpl @Inject constructor(
-    private val tmdbApiService: TmdbApiService,
-    private val genreRepository: GenreRepository,
-) : MoviesRepository {
+class MoviesRepositoryImpl
+    @Inject
+    constructor(
+        private val tmdbApiService: TmdbApiService,
+        private val genreRepository: GenreRepository,
+    ) : MoviesRepository {
+        override suspend fun getPopularMovies(page: Int): ResultOf<PagedResult<Movie>> {
+            genreRepository.refreshGenresIfNeeded()
+            val genreMap = genreRepository.observeGenreMap().first()
 
-    override suspend fun getPopularMovies(page: Int): ResultOf<PagedResult<Movie>> {
-        genreRepository.refreshGenresIfNeeded()
-        val genreMap = genreRepository.observeGenreMap().first()
-
-        return safeApiCall { tmdbApiService.getPopularMovies(page) }.map { response ->
-            PagedResult(
-                items = response.results.map { it.toDomain(genreMap) },
-                page = response.page,
-                totalPages = response.totalPages,
-            )
+            return safeApiCall { tmdbApiService.getPopularMovies(page) }.map { response ->
+                PagedResult(
+                    items = response.results.map { it.toDomain(genreMap) },
+                    page = response.page,
+                    totalPages = response.totalPages,
+                )
+            }
         }
-    }
 
-    override suspend fun searchMovies(query: String, page: Int): ResultOf<PagedResult<Movie>> {
-        genreRepository.refreshGenresIfNeeded()
-        val genreMap = genreRepository.observeGenreMap().first()
+        override suspend fun searchMovies(
+            query: String,
+            page: Int,
+        ): ResultOf<PagedResult<Movie>> {
+            genreRepository.refreshGenresIfNeeded()
+            val genreMap = genreRepository.observeGenreMap().first()
 
-        return safeApiCall { tmdbApiService.searchMovies(query, page) }.map { response ->
-            PagedResult(
-                items = response.results.map { it.toDomain(genreMap) },
-                page = response.page,
-                totalPages = response.totalPages,
-            )
+            return safeApiCall { tmdbApiService.searchMovies(query, page) }.map { response ->
+                PagedResult(
+                    items = response.results.map { it.toDomain(genreMap) },
+                    page = response.page,
+                    totalPages = response.totalPages,
+                )
+            }
         }
-    }
 
-    override suspend fun getMovieDetails(movieId: Int): ResultOf<Movie> =
-        safeApiCall { tmdbApiService.getMovieDetails(movieId) }.map { it.toDomain() }
-}
+        override suspend fun getMovieDetails(movieId: Int): ResultOf<Movie> =
+            safeApiCall { tmdbApiService.getMovieDetails(movieId) }.map { it.toDomain() }
+    }

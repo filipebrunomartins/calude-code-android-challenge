@@ -12,17 +12,18 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class RootViewModel @Inject constructor(
-    observeSessionUseCase: ObserveSessionUseCase,
-) : ViewModel() {
-
-    val startDestination: StateFlow<Route?> = observeSessionUseCase()
-        .map { session ->
-            when {
-                !session.isLoggedIn -> Route.Login
-                session.biometricEnabled -> Route.BiometricGate
-                else -> Route.Home
-            }
-        }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-}
+class RootViewModel
+    @Inject
+    constructor(
+        observeSessionUseCase: ObserveSessionUseCase,
+    ) : ViewModel() {
+        val startDestination: StateFlow<Route?> =
+            observeSessionUseCase()
+                .map { session ->
+                    when {
+                        !session.isLoggedIn -> Route.Login
+                        session.biometricEnabled -> Route.BiometricGate
+                        else -> Route.Home
+                    }
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    }

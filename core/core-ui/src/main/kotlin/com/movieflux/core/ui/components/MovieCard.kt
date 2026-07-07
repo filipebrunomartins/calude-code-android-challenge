@@ -37,9 +37,10 @@ fun MovieCard(
             AsyncImage(
                 model = posterUrl,
                 contentDescription = title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(2f / 3f),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(2f / 3f),
             )
             IconButton(onClick = onFavoriteClick, modifier = Modifier.align(Alignment.TopEnd)) {
                 Icon(

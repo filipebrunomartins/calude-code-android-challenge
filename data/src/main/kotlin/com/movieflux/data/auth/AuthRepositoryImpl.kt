@@ -17,35 +17,40 @@ private const val MOCK_USERNAME = "admin"
 private const val MOCK_PASSWORD = "1234"
 
 @Singleton
-class AuthRepositoryImpl @Inject constructor(
-    private val secureStorage: SecureStorage,
-) : AuthRepository {
+class AuthRepositoryImpl
+    @Inject
+    constructor(
+        private val secureStorage: SecureStorage,
+    ) : AuthRepository {
+        private val sessionFlow: MutableStateFlow<Session> = MutableStateFlow(readSessionFromStorage())
 
-    private val sessionFlow: MutableStateFlow<Session> = MutableStateFlow(readSessionFromStorage())
-
-    override suspend fun login(username: String, password: String): ResultOf<Unit> {
-        if (username == MOCK_USERNAME && password == MOCK_PASSWORD) {
-            secureStorage.putBoolean(KEY_IS_LOGGED_IN, true)
-            sessionFlow.value = readSessionFromStorage()
-            return ResultOf.Success(Unit)
+        override suspend fun login(
+            username: String,
+            password: String,
+        ): ResultOf<Unit> {
+            if (username == MOCK_USERNAME && password == MOCK_PASSWORD) {
+                secureStorage.putBoolean(KEY_IS_LOGGED_IN, true)
+                sessionFlow.value = readSessionFromStorage()
+                return ResultOf.Success(Unit)
+            }
+            return ResultOf.Error(Failure.Http(401))
         }
-        return ResultOf.Error(Failure.Http(401))
+
+        override suspend fun logout() {
+            secureStorage.putBoolean(KEY_IS_LOGGED_IN, false)
+            sessionFlow.value = readSessionFromStorage()
+        }
+
+        override fun observeSession(): StateFlow<Session> = sessionFlow
+
+        override suspend fun setBiometricEnabled(enabled: Boolean) {
+            secureStorage.putBoolean(KEY_BIOMETRIC_ENABLED, enabled)
+            sessionFlow.value = readSessionFromStorage()
+        }
+
+        private fun readSessionFromStorage(): Session =
+            Session(
+                isLoggedIn = secureStorage.getBoolean(KEY_IS_LOGGED_IN),
+                biometricEnabled = secureStorage.getBoolean(KEY_BIOMETRIC_ENABLED),
+            )
     }
-
-    override suspend fun logout() {
-        secureStorage.putBoolean(KEY_IS_LOGGED_IN, false)
-        sessionFlow.value = readSessionFromStorage()
-    }
-
-    override fun observeSession(): StateFlow<Session> = sessionFlow
-
-    override suspend fun setBiometricEnabled(enabled: Boolean) {
-        secureStorage.putBoolean(KEY_BIOMETRIC_ENABLED, enabled)
-        sessionFlow.value = readSessionFromStorage()
-    }
-
-    private fun readSessionFromStorage(): Session = Session(
-        isLoggedIn = secureStorage.getBoolean(KEY_IS_LOGGED_IN),
-        biometricEnabled = secureStorage.getBoolean(KEY_BIOMETRIC_ENABLED),
-    )
-}

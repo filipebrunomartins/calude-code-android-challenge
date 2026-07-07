@@ -1,5 +1,6 @@
 package com.movieflux.app.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -8,7 +9,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,10 +30,11 @@ import com.movieflux.feature.home.navigation.homeGraph
 @Composable
 fun MovieFluxNavHost(rootViewModel: RootViewModel = hiltViewModel()) {
     val startDestination by rootViewModel.startDestination.collectAsStateWithLifecycle()
-    val destination = startDestination ?: run {
-        LoadingState()
-        return
-    }
+    val destination =
+        startDestination ?: run {
+            LoadingState()
+            return
+        }
 
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -59,11 +60,13 @@ fun MovieFluxNavHost(rootViewModel: RootViewModel = hiltViewModel()) {
     }
 }
 
-private fun NavDestination?.isInBottomBar(): Boolean =
-    this?.hasRoute<Route.Home>() == true || this?.hasRoute<Route.Favorites>() == true
+private fun NavDestination?.isInBottomBar(): Boolean = this?.hasRoute<Route.Home>() == true || this?.hasRoute<Route.Favorites>() == true
 
 @Composable
-private fun MovieFluxBottomBar(navController: NavController, currentDestination: NavDestination?) {
+private fun MovieFluxBottomBar(
+    navController: NavController,
+    currentDestination: NavDestination?,
+) {
     NavigationBar {
         NavigationBarItem(
             selected = currentDestination?.hasRoute<Route.Home>() == true,

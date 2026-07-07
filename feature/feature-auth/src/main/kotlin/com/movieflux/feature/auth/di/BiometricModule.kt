@@ -10,9 +10,6 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class BiometricModule {
-
     @Binds
-    abstract fun bindBiometricCapabilityChecker(
-        impl: AndroidBiometricCapabilityChecker,
-    ): BiometricCapabilityChecker
+    abstract fun bindBiometricCapabilityChecker(impl: AndroidBiometricCapabilityChecker): BiometricCapabilityChecker
 }

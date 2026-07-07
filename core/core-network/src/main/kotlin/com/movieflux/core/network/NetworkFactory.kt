@@ -8,24 +8,29 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 object NetworkFactory {
-
     private val json = Json { ignoreUnknownKeys = true }
 
     fun createOkHttpClient(
         apiKeyInterceptor: ApiKeyInterceptor,
         enableLogging: Boolean = BuildConfig.DEBUG,
-    ): OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(apiKeyInterceptor)
-        .apply {
-            if (enableLogging) {
-                addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC })
-            }
-        }
-        .build()
+    ): OkHttpClient =
+        OkHttpClient
+            .Builder()
+            .addInterceptor(apiKeyInterceptor)
+            .apply {
+                if (enableLogging) {
+                    addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC })
+                }
+            }.build()
 
-    fun createRetrofit(baseUrl: String, okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .client(okHttpClient)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .build()
+    fun createRetrofit(
+        baseUrl: String,
+        okHttpClient: OkHttpClient,
+    ): Retrofit =
+        Retrofit
+            .Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
 }

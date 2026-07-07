@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -44,18 +43,20 @@ fun DetailsScreen(
 
     when {
         uiState.isLoading && uiState.movie == null -> LoadingState(modifier)
-        uiState.errorMessage != null && uiState.movie == null -> ErrorState(
-            failure = uiState.errorMessage!!,
-            onRetry = viewModel::loadDetails,
-            modifier = modifier,
-        )
-        uiState.movie != null -> MovieDetailsContent(
-            movie = uiState.movie!!,
-            isFavorite = uiState.isFavorite,
-            onFavoriteClick = viewModel::onFavoriteClick,
-            onShareClick = { shareMovie(context, uiState.movie!!) },
-            modifier = modifier,
-        )
+        uiState.errorMessage != null && uiState.movie == null ->
+            ErrorState(
+                failure = uiState.errorMessage!!,
+                onRetry = viewModel::loadDetails,
+                modifier = modifier,
+            )
+        uiState.movie != null ->
+            MovieDetailsContent(
+                movie = uiState.movie!!,
+                isFavorite = uiState.isFavorite,
+                onFavoriteClick = viewModel::onFavoriteClick,
+                onShareClick = { shareMovie(context, uiState.movie!!) },
+                modifier = modifier,
+            )
     }
 }
 
@@ -124,18 +125,23 @@ private fun MovieDetailsContent(
     }
 }
 
-private fun shareMovie(context: Context, movie: Movie) {
+private fun shareMovie(
+    context: Context,
+    movie: Movie,
+) {
     val posterUrl = movie.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
-    val shareText = buildString {
-        append(movie.title)
-        if (posterUrl != null) {
-            append("\n")
-            append(posterUrl)
+    val shareText =
+        buildString {
+            append(movie.title)
+            if (posterUrl != null) {
+                append("\n")
+                append(posterUrl)
+            }
         }
-    }
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, shareText)
-    }
+    val intent =
+        Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
     context.startActivity(Intent.createChooser(intent, movie.title))
 }

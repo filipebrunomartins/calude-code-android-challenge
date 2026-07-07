@@ -29,42 +29,45 @@ data class DetailsUiState(
 )
 
 @HiltViewModel
-class DetailsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
-    observeIsFavoriteUseCase: ObserveIsFavoriteUseCase,
-) : ViewModel() {
+class DetailsViewModel
+    @Inject
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        private val getMovieDetailsUseCase: GetMovieDetailsUseCase,
+        private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+        observeIsFavoriteUseCase: ObserveIsFavoriteUseCase,
+    ) : ViewModel() {
+        private val movieId: Int = savedStateHandle.toRoute<Route.Details>().movieId
 
-    private val movieId: Int = savedStateHandle.toRoute<Route.Details>().movieId
+        private val _uiState = MutableStateFlow(DetailsUiState(isLoading = true))
 
-    private val _uiState = MutableStateFlow(DetailsUiState(isLoading = true))
+        val uiState: StateFlow<DetailsUiState> =
+            combine(
+                _uiState,
+                observeIsFavoriteUseCase(movieId),
+            ) { state, isFavorite ->
+                state.copy(isFavorite = isFavorite)
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailsUiState(isLoading = true))
 
-    val uiState: StateFlow<DetailsUiState> = combine(
-        _uiState,
-        observeIsFavoriteUseCase(movieId),
-    ) { state, isFavorite ->
-        state.copy(isFavorite = isFavorite)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailsUiState(isLoading = true))
+        init {
+            loadDetails()
+        }
 
-    init {
-        loadDetails()
-    }
-
-    fun loadDetails() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (val result = getMovieDetailsUseCase(movieId)) {
-                is ResultOf.Success -> _uiState.update { it.copy(movie = result.data, isLoading = false) }
-                is ResultOf.Error -> _uiState.update {
-                    it.copy(isLoading = false, errorMessage = result.failure)
+        fun loadDetails() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                when (val result = getMovieDetailsUseCase(movieId)) {
+                    is ResultOf.Success -> _uiState.update { it.copy(movie = result.data, isLoading = false) }
+                    is ResultOf.Error ->
+                        _uiState.update {
+                            it.copy(isLoading = false, errorMessage = result.failure)
+                        }
                 }
             }
         }
-    }
 
-    fun onFavoriteClick() {
-        val movie = _uiState.value.movie ?: return
-        viewModelScope.launch { toggleFavoriteUseCase(movie) }
+        fun onFavoriteClick() {
+            val movie = _uiState.value.movie ?: return
+            viewModelScope.launch { toggleFavoriteUseCase(movie) }
+        }
     }
-}

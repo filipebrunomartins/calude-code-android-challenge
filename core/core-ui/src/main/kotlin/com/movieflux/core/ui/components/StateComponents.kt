@@ -32,9 +32,10 @@ fun ErrorState(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -51,9 +52,10 @@ fun EmptyState(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -61,9 +63,10 @@ fun EmptyState(
     }
 }
 
-private fun Failure.toMessage(): String = when (this) {
-    is Failure.NoConnection -> "Sem conexão com a internet. Verifique sua rede e tente novamente."
-    is Failure.Timeout -> "A conexão demorou demais. Tente novamente."
-    is Failure.Http -> "Não foi possível completar a solicitação (código $code)."
-    is Failure.Unknown -> "Algo deu errado. Tente novamente."
-}
+private fun Failure.toMessage(): String =
+    when (this) {
+        is Failure.NoConnection -> "Sem conexão com a internet. Verifique sua rede e tente novamente."
+        is Failure.Timeout -> "A conexão demorou demais. Tente novamente."
+        is Failure.Http -> "Não foi possível completar a solicitação (código $code)."
+        is Failure.Unknown -> "Algo deu errado. Tente novamente."
+    }

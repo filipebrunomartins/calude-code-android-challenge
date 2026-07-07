@@ -89,9 +89,9 @@ Invoque quando o contexto pedir:
 - Testes instrumentados: `./gradlew connectedAndroidTest`
 - Instalar no dispositivo físico conectado: `adb install -r app/build/outputs/apk/debug/app-debug.apk` (ou `android run --apks <caminho> --activity com.movieflux.app.MainActivity`)
 
-## Estado atual (2026-07-06) e próximos passos
+## Estado atual (2026-07-07) e próximos passos
 
-**Feito nesta sessão:**
+**Feito em 2026-07-06:**
 - Infra completa do Claude Code (CLAUDE.md, skills, hooks, subagents, CI) — ver seções acima.
 - Scaffolding Gradle completo: todos os 12 módulos criados e compilando (`domain`, `core-common`, `core-navigation` como Kotlin puro; `core-ui`, `core-network`, `core-security`, `data`, `feature-*`, `app` como Android). AGP 9.2.1 com built-in Kotlin (compileSdk/targetSdk 37), Gradle wrapper 9.4.1.
 - `./gradlew assembleDebug` passa de ponta a ponta (305 tasks, grafo completo do Hilt/KSP/Room montado sem erros).
@@ -99,12 +99,19 @@ Invoque quando o contexto pedir:
 - **Bug real encontrado e corrigido**: `HomeViewModel` inicializava `_uiState` com `isLoading = true`, e o guard de paginação em `loadNextPage()` (`if (state.isLoading) return`) bloqueava a própria primeira chamada feita em `init {}` — a Home ficava presa no spinner para sempre. Corrigido inicializando `_uiState` com `HomeUiState()` (isLoading=false); o valor inicial exposto via `stateIn(..., HomeUiState(isLoading = true))` continua fazendo a UI mostrar loading até a primeira emissão do `combine`.
 - **Gotcha de API descoberto**: `NavDestination.hasRoute<T>()` (rota type-safe da Navigation Compose 2.9.x) só resolve corretamente com `import androidx.navigation.NavDestination.Companion.hasRoute` explícito — é uma extension function declarada dentro do companion object, não um top-level function. Sem esse import exato, o Kotlin resolve silenciosamente para o outro overload antigo (`hasRoute(route: String, arguments: Bundle?)`) e dá erros de tipo confusos.
 
-**Pendente para amanhã:**
-1. **Testes unitários** (requisito explícito do desafio, ainda não escritos): `AuthViewModel`/`LoginUseCase` → `HomeViewModel` (paginação+busca+sync) → `DetailsViewModel` → `MoviesRepositoryImpl` → `FavoritesRepositoryImpl`, nessa ordem de prioridade. Usar a skill `android-testing` e/ou o subagent `test-writer`.
+**Feito em 2026-07-07:**
+- **Item 1 do pendente concluído**: 35 testes unitários escritos via subagent `test-writer`, na ordem definida — `LoginUseCase` (3), `AuthViewModel` (6), `HomeViewModel` (8), `DetailsViewModel` (5), `MoviesRepositoryImpl` (8), `FavoritesRepositoryImpl` (5). Todos passando (`./gradlew :data:testDebugUnitTest :domain:test :feature:feature-auth:testDebugUnitTest :feature:feature-home:testDebugUnitTest :feature:feature-details:testDebugUnitTest`). Nenhum bug real encontrado nesta rodada.
+- **`DetailsViewModel` exigiu Robolectric**: `SavedStateHandle.toRoute<Route.Details>()` chama `BundleKt.bundleOf(...)` internamente (navigation-common 2.9.8), que quebra em JVM puro (`android.os.Bundle` não mockado). Solução: `org.robolectric:robolectric:4.16.1` como `testImplementation` em `feature-details` (a entrada já existe no catálogo `libs.versions.toml`), `@RunWith(RobolectricTestRunner::class)` + `@Config(sdk = [34])` (34, não 37 — compileSdk 37 ainda não tem shadows do Robolectric) e `testOptions.unitTests.isIncludeAndroidResources = true` no `build.gradle.kts` do módulo. Vale replicar esse padrão em qualquer outro ViewModel futuro que use `SavedStateHandle.toRoute<T>()`.
+- **Gotcha de teste documentado**: ViewModels que expõem `uiState` via `combine(_uiState, someFlow).stateIn(scope, WhileSubscribed(5_000), placeholder)` (padrão usado em `HomeViewModel` e `DetailsViewModel`) emitem o `placeholder` como primeiro item para um novo subscriber do Turbine quando a inscrição ocorre depois que o estado interno já mudou — descartar esse primeiro item nos testes com `awaitItem()` extra antes de asserir.
+- O hook de formatação automática (ktlint) reformatou ~51 arquivos pré-existentes do repo (estilo `class X @Inject constructor(...)` quebrado em múltiplas linhas, etc.) como efeito colateral de salvar os novos arquivos de teste. Confirmado que é puramente cosmético via `git diff` em amostra — nenhuma lógica alterada. Ainda não commitado nem revisado item por item.
+
+**Pendente:**
+1. ~~Testes unitários~~ — **concluído em 2026-07-07** (ver acima).
 2. **Testar fluxo de biometria** de verdade no ASUS_A001D (ativar biometria após login, reabrir o app, checar fallback). Ainda não verificado manualmente.
 3. **Testar a tela de Details** (poster grande, gêneros, favoritar, compartilhar) — só a Home e Favoritos foram verificadas visualmente até agora.
 4. **Adicionar uma TMDB_API_KEY real** em `local.properties` para validar o fluxo de dados de verdade (até agora só vimos o estado de erro 401 esperado, com a chave placeholder).
-5. Rodar `./gradlew ktlintCheck` e `./gradlew detekt` pela primeira vez — ainda não validamos se o código gerado passa nas regras configuradas.
+5. Rodar `./gradlew ktlintCheck` e `./gradlew detekt` pela primeira vez — ainda não validamos se o código gerado passa nas regras configuradas (a reformatação automática já deixou o código mais próximo do padrão ktlint, mas falta validar oficialmente e rodar detekt).
 6. Preencher as seções "a preencher" do `README.md` (instruções de rodar, cobertura de testes, prints do fluxo de biometria).
 7. Revisar código com o subagent `code-reviewer` antes de abrir PR.
 8. Confirmar que o hook de pré-commit (gate de testes) funciona corretamente agora que `./gradlew` existe de verdade (ele tinha um fallback para quando gradlew não existia — checar se ainda faz sentido).
+9. **Decidir o que fazer com a reformatação automática de ~51 arquivos** (ver acima) — commitar separadamente dos testes, ou revisar diff por diff antes.

@@ -4,7 +4,10 @@ import com.movieflux.core.common.ResultOf
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
-    suspend fun login(username: String, password: String): ResultOf<Unit>
+    suspend fun login(
+        username: String,
+        password: String,
+    ): ResultOf<Unit>
 
     suspend fun logout()
 

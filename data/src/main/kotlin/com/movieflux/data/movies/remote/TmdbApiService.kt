@@ -8,9 +8,10 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface TmdbApiService {
-
     @GET("movie/popular")
-    suspend fun getPopularMovies(@Query("page") page: Int): MoviePageResponseDto
+    suspend fun getPopularMovies(
+        @Query("page") page: Int,
+    ): MoviePageResponseDto
 
     @GET("search/movie")
     suspend fun searchMovies(
@@ -22,5 +23,7 @@ interface TmdbApiService {
     suspend fun getGenres(): GenreListResponseDto
 
     @GET("movie/{movie_id}")
-    suspend fun getMovieDetails(@Path("movie_id") movieId: Int): MovieDetailDto
+    suspend fun getMovieDetails(
+        @Path("movie_id") movieId: Int,
+    ): MovieDetailDto
 }

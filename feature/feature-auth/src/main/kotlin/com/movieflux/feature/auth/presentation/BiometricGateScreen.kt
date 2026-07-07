@@ -19,24 +19,29 @@ fun BiometricGateScreen(
     val executor = remember(activity) { ContextCompat.getMainExecutor(activity) }
 
     LaunchedEffect(Unit) {
-        val callback = object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                onAuthenticated()
+        val callback =
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    onAuthenticated()
+                }
+
+                override fun onAuthenticationError(
+                    errorCode: Int,
+                    errString: CharSequence,
+                ) {
+                    onFallbackToLogin()
+                }
             }
 
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                onFallbackToLogin()
-            }
-        }
-
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Entrar no MovieFlux")
-            .setSubtitle("Use sua biometria para continuar")
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                    BiometricManager.Authenticators.DEVICE_CREDENTIAL,
-            )
-            .build()
+        val promptInfo =
+            BiometricPrompt.PromptInfo
+                .Builder()
+                .setTitle("Entrar no MovieFlux")
+                .setSubtitle("Use sua biometria para continuar")
+                .setAllowedAuthenticators(
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                        BiometricManager.Authenticators.DEVICE_CREDENTIAL,
+                ).build()
 
         BiometricPrompt(activity, executor, callback).authenticate(promptInfo)
     }

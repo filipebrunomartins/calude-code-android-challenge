@@ -3,7 +3,6 @@ package com.movieflux.core.navigation
 import kotlinx.serialization.Serializable
 
 sealed interface Route {
-
     @Serializable
     data object Login : Route
 
@@ -14,7 +13,9 @@ sealed interface Route {
     data object Home : Route
 
     @Serializable
-    data class Details(val movieId: Int) : Route
+    data class Details(
+        val movieId: Int,
+    ) : Route
 
     @Serializable
     data object Favorites : Route

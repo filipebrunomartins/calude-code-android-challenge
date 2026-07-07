@@ -23,46 +23,49 @@ data class LoginUiState(
 )
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(
-    private val loginUseCase: LoginUseCase,
-    private val setBiometricEnabledUseCase: SetBiometricEnabledUseCase,
-    private val biometricCapabilityChecker: BiometricCapabilityChecker,
-) : ViewModel() {
+class AuthViewModel
+    @Inject
+    constructor(
+        private val loginUseCase: LoginUseCase,
+        private val setBiometricEnabledUseCase: SetBiometricEnabledUseCase,
+        private val biometricCapabilityChecker: BiometricCapabilityChecker,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(LoginUiState())
+        val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+        fun onUsernameChanged(value: String) {
+            _uiState.update { it.copy(username = value, errorMessage = null) }
+        }
 
-    fun onUsernameChanged(value: String) {
-        _uiState.update { it.copy(username = value, errorMessage = null) }
-    }
+        fun onPasswordChanged(value: String) {
+            _uiState.update { it.copy(password = value, errorMessage = null) }
+        }
 
-    fun onPasswordChanged(value: String) {
-        _uiState.update { it.copy(password = value, errorMessage = null) }
-    }
-
-    fun login() {
-        val state = _uiState.value
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (loginUseCase(state.username, state.password)) {
-                is ResultOf.Success -> _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        loginSucceeded = true,
-                        shouldOfferBiometric = biometricCapabilityChecker.canAuthenticate(),
-                    )
-                }
-                is ResultOf.Error -> _uiState.update {
-                    it.copy(isLoading = false, errorMessage = "Usuário ou senha inválidos")
+        fun login() {
+            val state = _uiState.value
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                when (loginUseCase(state.username, state.password)) {
+                    is ResultOf.Success ->
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                loginSucceeded = true,
+                                shouldOfferBiometric = biometricCapabilityChecker.canAuthenticate(),
+                            )
+                        }
+                    is ResultOf.Error ->
+                        _uiState.update {
+                            it.copy(isLoading = false, errorMessage = "Usuário ou senha inválidos")
+                        }
                 }
             }
         }
-    }
 
-    fun onBiometricPreferenceSelected(enabled: Boolean) {
-        viewModelScope.launch {
-            setBiometricEnabledUseCase(enabled)
-            _uiState.update { it.copy(shouldOfferBiometric = false) }
+        fun onBiometricPreferenceSelected(enabled: Boolean) {
+            viewModelScope.launch {
+                setBiometricEnabledUseCase(enabled)
+                _uiState.update { it.copy(shouldOfferBiometric = false) }
+            }
         }
     }
-}
