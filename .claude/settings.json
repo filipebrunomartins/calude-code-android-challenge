@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "if": "Edit(*.kt)|Write(*.kt)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x ./gradlew ] && ./gradlew ktlintFormat -q || true",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "if": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/check-no-api-key.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "[ -x ./gradlew ] && ./gradlew testDebugUnitTest -q || echo 'gradlew ainda não existe — pulando gate de testes' >&2",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

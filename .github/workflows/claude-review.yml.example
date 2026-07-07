@@ -1,0 +1,29 @@
+# Exemplo de workflow para revisão automática de PRs com o Claude Code GitHub Action.
+# NÃO ativado por padrão neste projeto — para ativar:
+#   1. Rode `/install-github-app` no Claude Code (ou instale https://github.com/apps/claude manualmente)
+#      com permissões de Contents/Issues/Pull Requests (read & write).
+#   2. Adicione o secret ANTHROPIC_API_KEY nas configurações do repositório no GitHub.
+#   3. Renomeie este arquivo para `claude-review.yml` (removendo o `.example`).
+#
+# Depois de ativado, comentar "@claude revise este PR" em um PR ou issue aciona a revisão.
+
+name: Claude Code Review
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  claude:
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '@claude')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude"
+          prompt: "Revise este PR do MovieFlux com foco em segurança (API key, EncryptedSharedPreferences, BiometricPrompt com fallback), aderência à arquitetura modular descrita no CLAUDE.md, e cobertura de testes de ViewModels/Repositories."

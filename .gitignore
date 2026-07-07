@@ -1,0 +1,20 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+**/build/
+.kotlin/
+
+# Secrets
+*.keystore
+*.jks
+secrets.properties
+
+# Claude Code local overrides (not shared)
+.claude/settings.local.json

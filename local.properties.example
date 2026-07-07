@@ -1,0 +1,4 @@
+# Copie este arquivo para "local.properties" (ignorado pelo git) e preencha sua chave.
+# sdk.dir é preenchido automaticamente pelo Android Studio na primeira sincronização.
+
+TMDB_API_KEY=coloque_sua_chave_aqui
