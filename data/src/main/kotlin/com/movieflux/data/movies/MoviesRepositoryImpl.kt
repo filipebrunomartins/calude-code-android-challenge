@@ -49,6 +49,5 @@ class MoviesRepositoryImpl
             }
         }
 
-        override suspend fun getMovieDetails(movieId: Int): ResultOf<Movie> =
-            safeApiCall { tmdbApiService.getMovieDetails(movieId) }.map { it.toDomain() }
+        override suspend fun getMovieDetails(movieId: Int): ResultOf<Movie> = safeApiCall { tmdbApiService.getMovieDetails(movieId) }.map { it.toDomain() }
     }

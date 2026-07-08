@@ -51,7 +51,7 @@ class AuthViewModel
                             it.copy(
                                 isLoading = false,
                                 loginSucceeded = true,
-                                shouldOfferBiometric = biometricCapabilityChecker.canAuthenticate(),
+                                shouldOfferBiometric = biometricCapabilityChecker.allowedAuthenticators() != null,
                             )
                         }
                     is ResultOf.Error ->

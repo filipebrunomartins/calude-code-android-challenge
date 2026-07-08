@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -27,6 +28,7 @@ import com.movieflux.core.ui.components.EmptyState
 import com.movieflux.core.ui.components.ErrorState
 import com.movieflux.core.ui.components.LoadingState
 import com.movieflux.core.ui.components.MovieCard
+import com.movieflux.domain.movies.Movie
 
 private const val TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w342"
 private const val LOAD_MORE_THRESHOLD = 4
@@ -76,32 +78,47 @@ fun HomeScreen(
                 )
             uiState.movies.isEmpty() -> EmptyState(message = "Nenhum filme encontrado")
             else ->
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    state = gridState,
-                    contentPadding = PaddingValues(8.dp),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    items(uiState.movies, key = { it.id }) { movie ->
-                        MovieCard(
-                            title = movie.title,
-                            posterUrl = movie.posterPath?.let { "$TMDB_POSTER_BASE_URL$it" },
-                            voteAverage = movie.voteAverage,
-                            isFavorite = movie.isFavorite,
-                            onClick = { onMovieClick(movie.id) },
-                            onFavoriteClick = { viewModel.onFavoriteClick(movie) },
-                            modifier = Modifier.padding(8.dp),
-                        )
-                    }
-                    if (uiState.isLoadingMore) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(16.dp),
-                            )
-                        }
-                    }
-                }
+                MovieGrid(
+                    uiState = uiState,
+                    gridState = gridState,
+                    onMovieClick = onMovieClick,
+                    onFavoriteClick = viewModel::onFavoriteClick,
+                )
+        }
+    }
+}
+
+@Composable
+private fun MovieGrid(
+    uiState: HomeUiState,
+    gridState: LazyGridState,
+    onMovieClick: (Int) -> Unit,
+    onFavoriteClick: (Movie) -> Unit,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        state = gridState,
+        contentPadding = PaddingValues(8.dp),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        items(uiState.movies, key = { it.id }) { movie ->
+            MovieCard(
+                title = movie.title,
+                posterUrl = movie.posterPath?.let { "$TMDB_POSTER_BASE_URL$it" },
+                voteAverage = movie.voteAverage,
+                isFavorite = movie.isFavorite,
+                onClick = { onMovieClick(movie.id) },
+                onFavoriteClick = { onFavoriteClick(movie) },
+                modifier = Modifier.padding(8.dp),
+            )
+        }
+        if (uiState.isLoadingMore) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
         }
     }
 }

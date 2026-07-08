@@ -12,35 +12,37 @@ when_to_use: Ao criar ou editar BiometricGateScreen, AuthViewModel, ou qualquer 
 
 ## Passo 1 — checar disponibilidade antes de oferecer o toggle
 
-Depois do primeiro login bem-sucedido, antes de perguntar "deseja ativar biometria?", checar:
+Depois do primeiro login bem-sucedido, antes de perguntar "deseja ativar biometria?", checar `BIOMETRIC_STRONG` primeiro e cair para `BIOMETRIC_WEAK` se necessário — ver `BiometricCapabilityChecker.allowedAuthenticators()` em `feature-auth/presentation`:
 
 ```kotlin
 val biometricManager = BiometricManager.from(context)
-when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
-    BiometricManager.BIOMETRIC_SUCCESS -> // ok, pode oferecer o toggle
-    BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE,
-    BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED,
-    BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> // não oferecer o toggle; app segue só com senha
-    else -> // erro transitório — não oferecer agora, pode tentar de novo depois
+val strongWithCredential = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+val allowedAuthenticators = when {
+    biometricManager.canAuthenticate(strongWithCredential) == BiometricManager.BIOMETRIC_SUCCESS -> strongWithCredential
+    biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS ->
+        BiometricManager.Authenticators.BIOMETRIC_WEAK
+    else -> null // não oferecer o toggle; app segue só com senha
 }
 ```
 
-Nunca mostrar o diálogo de "ativar biometria" se `canAuthenticate` não retornar `BIOMETRIC_SUCCESS` — é um dos critérios de avaliação explícitos do desafio ("implementação correta da API de Biometria... e fallback em caso de falha").
+**Por que o fallback para `BIOMETRIC_WEAK`:** validado em dispositivo físico real (ASUS_A001D, Android 9 / API 28) — o sensor de digital tem biometria cadastrada e funcional, mas o framework não o certifica como Class 3, então `canAuthenticate(BIOMETRIC_STRONG)` retorna falha mesmo assim. Exigir só `BIOMETRIC_STRONG` deixaria aparelhos mais antigos (ainda dentro do `minSdk 26` do projeto) sem poder usar biometria nenhuma. Nunca mostrar o diálogo de "ativar biometria" se `allowedAuthenticators()` retornar `null` — é um dos critérios de avaliação explícitos do desafio ("implementação correta da API de Biometria... e fallback em caso de falha").
 
-## Passo 2 — construir o BiometricPrompt com fallback
+## Passo 2 — construir o BiometricPrompt com o nível detectado
 
 ```kotlin
-val promptInfo = BiometricPrompt.PromptInfo.Builder()
+val promptInfoBuilder = BiometricPrompt.PromptInfo.Builder()
     .setTitle("Entrar no MovieFlux")
     .setSubtitle("Use sua biometria para continuar")
-    .setAllowedAuthenticators(
-        BiometricManager.Authenticators.BIOMETRIC_STRONG or
-        BiometricManager.Authenticators.DEVICE_CREDENTIAL
-    )
-    .build()
+    .setAllowedAuthenticators(allowedAuthenticators) // o mesmo valor detectado no Passo 1
+
+// DEVICE_CREDENTIAL e setNegativeButtonText são mutuamente exclusivos na API do AndroidX
+// Biometric — só usar o botão negativo quando DEVICE_CREDENTIAL não está incluído.
+if (allowedAuthenticators and BiometricManager.Authenticators.DEVICE_CREDENTIAL == 0) {
+    promptInfoBuilder.setNegativeButtonText("Usar senha")
+}
 ```
 
-- `DEVICE_CREDENTIAL` (PIN/padrão/senha do aparelho) combinado com `BIOMETRIC_STRONG` dá um fallback nativo do sistema — **não é necessário (nem permitido) chamar `.setNegativeButtonText(...)` junto com `DEVICE_CREDENTIAL`**, os dois são mutuamente exclusivos na API do AndroidX Biometric (usar `setNegativeButtonText` só se optar por não incluir `DEVICE_CREDENTIAL`).
+- `DEVICE_CREDENTIAL` (PIN/padrão/senha do aparelho) combinado com `BIOMETRIC_STRONG` dá um fallback nativo do sistema. **`BIOMETRIC_WEAK` não pode ser combinado com `DEVICE_CREDENTIAL`** na mesma prompt (a API rejeita essa combinação) — por isso o `PromptInfo` precisa ser montado com o mesmo valor de `allowedAuthenticators` calculado no Passo 1, nunca hardcoded.
 
 ## Passo 3 — tratar o resultado (segundo nível de fallback)
 

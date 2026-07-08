@@ -1,5 +1,6 @@
 package com.movieflux.feature.auth.presentation
 
+import androidx.biometric.BiometricManager
 import app.cash.turbine.test
 import com.movieflux.core.common.Failure
 import com.movieflux.core.common.ResultOf
@@ -38,7 +39,7 @@ class AuthViewModelTest {
         runTest {
             // given
             coEvery { loginUseCase(any(), any()) } returns ResultOf.Success(Unit)
-            every { biometricCapabilityChecker.canAuthenticate() } returns true
+            every { biometricCapabilityChecker.allowedAuthenticators() } returns BiometricManager.Authenticators.BIOMETRIC_STRONG
             val viewModel = createViewModel()
             viewModel.onUsernameChanged("admin")
             viewModel.onPasswordChanged("1234")
@@ -67,7 +68,7 @@ class AuthViewModelTest {
         runTest {
             // given
             coEvery { loginUseCase(any(), any()) } returns ResultOf.Success(Unit)
-            every { biometricCapabilityChecker.canAuthenticate() } returns false
+            every { biometricCapabilityChecker.allowedAuthenticators() } returns null
             val viewModel = createViewModel()
 
             // when
@@ -139,7 +140,7 @@ class AuthViewModelTest {
         runTest {
             // given
             coEvery { loginUseCase(any(), any()) } returns ResultOf.Success(Unit)
-            every { biometricCapabilityChecker.canAuthenticate() } returns true
+            every { biometricCapabilityChecker.allowedAuthenticators() } returns BiometricManager.Authenticators.BIOMETRIC_STRONG
             val viewModel = createViewModel()
             viewModel.login()
             advanceUntilIdle()

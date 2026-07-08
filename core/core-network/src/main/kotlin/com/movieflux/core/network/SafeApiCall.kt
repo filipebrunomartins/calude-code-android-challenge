@@ -7,6 +7,7 @@ import retrofit2.HttpException
 import java.io.IOException
 import java.net.SocketTimeoutException
 
+@Suppress("TooGenericExceptionCaught", "SwallowedException")
 suspend fun <T> safeApiCall(apiCall: suspend () -> T): ResultOf<T> =
     try {
         ResultOf.Success(apiCall())

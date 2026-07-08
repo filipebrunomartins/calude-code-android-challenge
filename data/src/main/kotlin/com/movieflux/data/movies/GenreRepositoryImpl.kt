@@ -18,8 +18,7 @@ class GenreRepositoryImpl
         private val tmdbApiService: TmdbApiService,
         private val genreDao: GenreDao,
     ) : GenreRepository {
-        override fun observeGenreMap(): Flow<Map<Int, String>> =
-            genreDao.observeAll().map { entities -> entities.associate { it.id to it.name } }
+        override fun observeGenreMap(): Flow<Map<Int, String>> = genreDao.observeAll().map { entities -> entities.associate { it.id to it.name } }
 
         override suspend fun refreshGenresIfNeeded(): ResultOf<Unit> {
             if (genreDao.count() > 0) return ResultOf.Success(Unit)

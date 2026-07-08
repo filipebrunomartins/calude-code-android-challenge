@@ -1,9 +1,23 @@
 build:
   maxIssues: 0
 
+comments:
+  active: false
+
 style:
   MagicNumber:
     active: false
+  MaxLineLength:
+    # 160 em vez do padrão 120: nomes de teste Given-When-Then em português (convenção do
+    # projeto, ver CLAUDE.md) e assinaturas @Composable de expressão única passam do limite
+    # padrão; o formatter ktlint também recolhe corpos de expressão de volta a uma linha.
+    maxLineLength: 160
 
-comments:
-  active: false
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+
+complexity:
+  LongParameterList:
+    functionThreshold: 8
+    constructorThreshold: 8

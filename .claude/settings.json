@@ -25,7 +25,7 @@
           },
           {
             "type": "command",
-            "command": "[ -x ./gradlew ] && ./gradlew testDebugUnitTest -q || echo 'gradlew ainda não existe — pulando gate de testes' >&2",
+            "command": "if [ -x ./gradlew ]; then ./gradlew testDebugUnitTest -q; else echo 'gradlew ainda não existe — pulando gate de testes' >&2; fi",
             "timeout": 300
           }
         ]

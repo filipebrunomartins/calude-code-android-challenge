@@ -19,8 +19,7 @@ class FavoritesRepositoryImpl
 
         override fun observeIsFavorite(movieId: Int): Flow<Boolean> = favoriteMovieDao.observeIsFavorite(movieId)
 
-        override fun observeFavorites(): Flow<List<Movie>> =
-            favoriteMovieDao.observeAll().map { entities -> entities.map { it.toDomain() } }
+        override fun observeFavorites(): Flow<List<Movie>> = favoriteMovieDao.observeAll().map { entities -> entities.map { it.toDomain() } }
 
         override suspend fun toggleFavorite(movie: Movie) {
             val existing = favoriteMovieDao.findById(movie.id)

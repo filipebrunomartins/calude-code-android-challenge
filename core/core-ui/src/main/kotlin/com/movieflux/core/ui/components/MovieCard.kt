@@ -32,7 +32,7 @@ fun MovieCard(
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Box {
             AsyncImage(
                 model = posterUrl,
@@ -45,7 +45,7 @@ fun MovieCard(
             IconButton(onClick = onFavoriteClick, modifier = Modifier.align(Alignment.TopEnd)) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = null,
+                    contentDescription = if (isFavorite) "Remover dos favoritos" else "Favoritar",
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
